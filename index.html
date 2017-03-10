@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Hopscotch MIDI Hack</title>
+	<script type="text/javascript" src="./build/MidiConvert.js"></script>
+        <style type="text/css">
+            
+            body {
+                font-family: "Avenir";
+                margin: 0px;
+            }
+
+            #FileDrop
+            {
+		position: relative;
+			
+            }
+
+            #FileDrop input{
+		/*left: 5%;*/
+		margin-left: 50px;
+		position: relative;
+
+            }
+
+		#Title {
+			margin-left: 50px;
+			font-size: 30px;
+			top: 0%;
+		}
+
+		textarea {
+			font-family: "Avenir";
+			height: 300px;
+			width: 100%;
+			display: inline-block;
+			position: relative;
+			/*float: left;*/
+		}
+
+		#Results {
+			/*position: absolute;*/
+			width: 500px;
+			margin-left: 50px;
+			top: 30px;
+			/*left: 5%;*/
+			position: relative;
+		}
+
+		#Description {
+			position: absolute;
+			width: 100%;
+			height: 40px;
+			font-size: 20px;
+			bottom: 0px;
+		}
+
+                
+            #Links {
+                margin-left: 50px;
+                margin-bottom: 10px;
+            }
+            
+            #Credit {
+                
+                position: relative;
+                margin-left: 50px;
+                margin-top: 50px;
+                /*float: left*/
+            }
+
+	</style>
+</head>
+<body>
+	
+
+	<div id="Title">
+		<p><b>Hopscotch MIDI Hack</b></p>
+	</div>
+
+	<div id="Links">
+            <a href="">What is the Hopscotch MIDI Hack?</a>
+            </br>
+            <a href="tutorial.html">How to use Hopscotch MIDI Hack</a>
+
+	</div>
+
+
+	<div id="FileDrop">
+		<input type="file" accept="audio/midi">
+	</div>
+
+	<div id="Results">
+		<textarea id="ResultsText"></textarea>
+	</div>
+
+    <div id="Credit">
+        <p>Huge credit to <a href="https://tonejs.github.io/MidiConvert/">MIDIConvert</a> for the MIDI to JSON code! Without it, 
+        this would not have been possible! Also credit to BuildASnowman for making the original MIDI hack!</p>
+        <p>Made by MR.GAM3R.</p>
+    </div>
+
+	<script type="text/javascript">
+
+		if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
+			document.querySelector("#FileDrop #Text").textContent = "Reading files not supported by this browser";
+		} else {
+
+			var fileDrop = document.querySelector("#FileDrop")
+
+			fileDrop.addEventListener("dragenter", function(){
+				fileDrop.classList.add("Hover");
+			})
+
+			fileDrop.addEventListener("dragleave", function(){
+				fileDrop.classList.remove("Hover");
+			});
+
+			fileDrop.addEventListener("drop", function(){
+				fileDrop.classList.remove("Hover");
+			});
+
+			document.querySelector("#FileDrop input").addEventListener("change", function(e){
+				//get the files
+				console.log("hi");
+				var files = e.target.files;
+				if (files.length > 0){
+					var file = files[0];
+					//document.querySelector("#FileDrop #Text").textContent = file.name;
+					parseFile(file);
+				}
+			});
+
+
+		}
+
+		
+		function parseFile(file){
+			//read the file
+			var reader = new FileReader();
+			reader.onload = function(e){
+
+				var partsData = MidiConvert.parse(e.target.result);
+				var data = JSON.stringify(partsData, undefined, 2);
+
+				var json = JSON.parse(data);
+				var tracks = json.tracks;
+				console.log(tracks.length);
+				for (var z = 0; z < tracks.length; z++)
+				{
+						var track = tracks[z];
+						//console.log(track);
+
+						if (track.notes !== undefined)
+						{
+								var notes = track.notes;
+								//console.log(notes);
+								var hopscotchCode = "";
+								var currentTime = 0;
+								var midiTimes = [];
+								var midiNotes = [];
+
+								for (var i = 0; i < notes.length; i++)
+								{
+										var note = notes[i].name;
+										var first = note.charAt(0);
+										var last = note.charAt(note.length);
+										var accidental = ""
+										var low = ""
+
+										if (note.length === 3)
+										{
+												accidental = note.charAt(1);
+												if (first.toLowerCase() == "g" || first.toLowerCase() == "d" || first.toLowerCase() == "a")
+												{
+														if (first.toLowerCase() == "g")
+														{
+																first = "a";
+														}
+
+														if (first.toLowerCase() == "a")
+														{
+																first = "b";
+														}
+
+														if (first.toLowerCase() == "d")
+														{
+																first = "e";
+														}
+
+															accidental = "flat";
+												}
+												else
+												{
+														accidental = "sharp"
+												}
+
+												last = note.charAt(1)
+										}
+
+										if (last <= 3)
+										{
+												low = "low-"
+										}
+
+										var currentValue = low + first.toLowerCase() + accidental;
+										midiNotes.push(currentValue)
+
+										var previousTime = currentTime;
+										currentTime = notes[i].time
+										var time = (currentTime - previousTime);
+										midiTimes.push(Math.round(time * 1000));
+
+
+								} // end for
+
+								var index = midiTimes.indexOf(1);
+								midiTimes.splice(0, 1);
+								midiTimes.push(0)
+                                
+								for (var q = 0; q < midiTimes.length; q++)
+								{
+											hopscotchCode = hopscotchCode
+														+ "\n" + "{"
+														+ "\n" + "\"block_class\" : \"method\","
+														+ "\n" + "\"type\" : 52,"
+														+ "\n" + "\"description\" : \"Start Sound\","
+														+ "\n" + "\"parameters\" : ["
+														+ "\n" + "{"
+														+ "\n" + "\"defaultValue\" : \"clickPlayable\","
+														+ "\n" + "\"value\" : \"" + midiNotes[q] + "\","
+														+ "\n" + "\"key\" : \"\","
+														+ "\n" + "\"type\" : 51"
+														+ "\n" + "},"
+														+ "\n" + "{"
+														+ "\n" + "\"defaultValue\" : \"500\","
+														+ "\n" + "\"value\" : \"" + midiTimes[q] + "\","
+														+ "\n" + "\"key\" : \"wait\","
+														+ "\n" + "\"type\" : 42"
+														+ "\n" + "}"
+														+ "\n" + "]"
+														+ "\n" + "},";
+								}
+
+
+						} // end if
+
+				} // end for
+
+						document.querySelector("#ResultsText").value = hopscotchCode;
+
+			};
+			reader.readAsBinaryString(file);
+		}
+
+	</script>
+
+</body>
+</html>
