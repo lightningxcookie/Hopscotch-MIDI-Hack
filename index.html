@@ -8,71 +8,54 @@
             body {
                 font-family: "Avenir";
                 margin: 0px;
+                margin-left: 50px;
             }
 
             #FileDrop
             {
-		position: relative;
-			
+                position: relative;
             }
 
-            #FileDrop input{
-		/*left: 5%;*/
-		margin-left: 50px;
-		position: relative;
-
+            #FileDrop input{    
+                position: relative;
             }
 
-		#Title {
-			margin-left: 50px;
-			font-size: 30px;
-			top: 0%;
-		}
+            #Title {    
+                font-size: 30px;
+                top: 0%;
+            }
 
-		textarea {
-			font-family: "Avenir";
-			height: 300px;
-			width: 100%;
-			display: inline-block;
-			position: relative;
-			/*float: left;*/
-		}
+            textarea {
+                font-family: "Avenir";
+                height: 300px;
+                width: 100%;
+                display: inline-block;
+                position: relative;
+            }
 
-		#Results {
-			/*position: absolute;*/
-			width: 500px;
-			margin-left: 50px;
-			top: 30px;
-			/*left: 5%;*/
-			position: relative;
-		}
+            #Results {
+                width: 500px;
+                top: 30px;
+                position: relative;
+            }
 
-		#Description {
-			position: absolute;
-			width: 100%;
-			height: 40px;
-			font-size: 20px;
-			bottom: 0px;
-		}
-
-                
+            #Description {
+                position: absolute;
+                width: 100%;
+                height: 40px;
+                font-size: 20px;
+                bottom: 0px;
+            }
+ 
             #Links {
-                margin-left: 50px;
                 margin-bottom: 10px;
             }
             
             #Credit {
-                
                 position: relative;
-                margin-left: 50px;
                 margin-top: 50px;
-                /*float: left*/
             }
             
-            #notice {
-                margin-left: 50px;
-            }
-
 	</style>
 </head>
 <body>
@@ -82,7 +65,7 @@
 		<p><b>Hopscotch MIDI Hack</b></p>
 	</div>
     
-    <p id="notice"><b>Hey all! Currently, there is an issue with the Hopscotch MIDI hack tool with MIDI files with multiple tracks. Hopscotch will play each track separately, one after another, rather than together like how they should be. This is an issue with the MIDI hack tool. I am working on fixing it, but right now for best results please use MIDI files with only one track. Thanks for your patience.</b></p>
+    <p id="notice"><b>UPDATE 26-03-17: fixed the multi-track file issue.</b></p>
 
 	<div id="Links">
             <a href="">What is the Hopscotch MIDI Hack?</a>
@@ -151,109 +134,113 @@
 
 				var json = JSON.parse(data);
 				var tracks = json.tracks;
-				console.log(tracks.length);
+                
+                var oldFormatNotes = [];
+                var oldFormatTimes = [];
+                
 				for (var z = 0; z < tracks.length; z++)
 				{
 						var track = tracks[z];
+                        var notes = track.notes;
 						//console.log(track);
 
 						if (track.notes !== undefined)
 						{
-								var notes = track.notes;
-								//console.log(notes);
-								var hopscotchCode = "";
-								var currentTime = 0;
-								var midiTimes = [];
-								var midiNotes = [];
-
-								for (var i = 0; i < notes.length; i++)
-								{
-										var note = notes[i].name;
-										var first = note.charAt(0);
-										var last = note.charAt(note.length);
-										var accidental = ""
-										var low = ""
-
-										if (note.length === 3)
-										{
-												accidental = note.charAt(1);
-												if (first.toLowerCase() == "g" || first.toLowerCase() == "d" || first.toLowerCase() == "a")
-												{
-														if (first.toLowerCase() == "g")
-														{
-																first = "a";
-														}
-
-														if (first.toLowerCase() == "a")
-														{
-																first = "b";
-														}
-
-														if (first.toLowerCase() == "d")
-														{
-																first = "e";
-														}
-
-															accidental = "flat";
-												}
-												else
-												{
-														accidental = "sharp"
-												}
-
-												last = note.charAt(1)
-										}
-
-										if (last <= 3)
-										{
-												low = "low-"
-										}
-
-										var currentValue = low + first.toLowerCase() + accidental;
-										midiNotes.push(currentValue)
-
-										var previousTime = currentTime;
-										currentTime = notes[i].time
-										var time = (currentTime - previousTime);
-										midiTimes.push(Math.round(time * 1000));
-
-
-								} // end for
-
-								var index = midiTimes.indexOf(1);
-								midiTimes.splice(0, 1);
-								midiTimes.push(0)
-                                
-								for (var q = 0; q < midiTimes.length; q++)
-								{
-											hopscotchCode = hopscotchCode
-														+ "\n" + "{"
-														+ "\n" + "\"block_class\" : \"method\","
-														+ "\n" + "\"type\" : 52,"
-														+ "\n" + "\"description\" : \"Start Sound\","
-														+ "\n" + "\"parameters\" : ["
-														+ "\n" + "{"
-														+ "\n" + "\"defaultValue\" : \"clickPlayable\","
-														+ "\n" + "\"value\" : \"" + midiNotes[q] + "\","
-														+ "\n" + "\"key\" : \"\","
-														+ "\n" + "\"type\" : 51"
-														+ "\n" + "},"
-														+ "\n" + "{"
-														+ "\n" + "\"defaultValue\" : \"500\","
-														+ "\n" + "\"value\" : \"" + midiTimes[q] + "\","
-														+ "\n" + "\"key\" : \"wait\","
-														+ "\n" + "\"type\" : 42"
-														+ "\n" + "}"
-														+ "\n" + "]"
-														+ "\n" + "},";
-								}
-
-
+                                for (var x = 0; x < notes.length; x++)
+                                {
+                                    oldFormatNotes.push(notes[x].name);
+                                    oldFormatTimes.push(notes[x].time);
+                                } // end for
+                              
 						} // end if
 
+				} // end for   
+                
+                var list = [];
+                for (var j = 0; j < oldFormatNotes.length; j++)
+                {
+                    list.push({'note_name': oldFormatNotes[j], 'note_time': oldFormatTimes[j]});
+                } // end for
+                
+                list.sort(function(a, b) {
+                    return ((a.note_time < b.note_time) ? -1 : ((a.note_time == b.note_time) ? 0 : 1));
+                });
+                
+                for (var k = 0; k < list.length; k++)
+                {
+                    oldFormatNotes[k] = list[k].note_name;
+                    oldFormatTimes[k] = list[k].note_time;
+                } // end for
+
+                var hopscotchCode = "";
+				var currentTime = 0;
+				var midiTimes = [];
+				var midiNotes = [];
+                
+                for (var i = 0; i < oldFormatNotes.length; i++)
+				{
+				    var note = oldFormatNotes[i];
+                    var first = note.charAt(0);
+				    var last = note.charAt(note.length);
+				    var accidental = ""
+				    var low = ""
+
+				    if (note.length === 3)
+				    {
+                        if (first.toLowerCase() == "g" || first.toLowerCase() == "d" || first.toLowerCase() == "a")
+                        {
+                            if (first.toLowerCase() == "g") { first = "a"; } // end if
+                            else if (first.toLowerCase() == "a") { first = "b"; } // end else/if
+                            else if (first.toLowerCase() == "d") { first = "e"; } // end else/if
+                            accidental = "flat";
+                        } // end if
+                        else
+                        { accidental = "sharp" } // end else
+
+                        last = note.charAt(1)
+                    } // end if
+                    
+				    if (last <= "3") {low = "low-"; }
+
+                    var currentValue = low + first.toLowerCase() + accidental;
+                    midiNotes.push(currentValue);
+                    
+                    var previousTime = currentTime;
+                    currentTime = oldFormatTimes[i];
+                    var time = (currentTime - previousTime);
+                    midiTimes.push(Math.round(time * 1000));
+				} // end for
+                
+                var index = midiTimes.indexOf(1);
+				midiTimes.splice(0, 1);
+				midiTimes.push(0);
+                            
+				for (var q = 0; q < midiTimes.length; q++)
+				{
+                    hopscotchCode = hopscotchCode
+                        + "\n" + "{"
+                        + "\n" + "\"block_class\" : \"method\","
+                        + "\n" + "\"type\" : 52,"
+                        + "\n" + "\"description\" : \"Start Sound\","
+                        + "\n" + "\"parameters\" : ["
+                        + "\n" + "{"
+                        + "\n" + "\"defaultValue\" : \"clickPlayable\","
+                        + "\n" + "\"value\" : \"" + midiNotes[q] + "\","
+                        + "\n" + "\"key\" : \"\","
+                        + "\n" + "\"type\" : 51"
+                        + "\n" + "},"
+                        + "\n" + "{"
+                        + "\n" + "\"defaultValue\" : \"500\","
+                        + "\n" + "\"value\" : \"" + midiTimes[q] + "\","
+                        + "\n" + "\"key\" : \"wait\","
+                        + "\n" + "\"type\" : 42"
+                        + "\n" + "}"
+                        + "\n" + "]"
+                        + "\n" + "},";
+                                    
 				} // end for
 
-						document.querySelector("#ResultsText").value = hopscotchCode;
+				document.querySelector("#ResultsText").value = hopscotchCode;
 
 			};
 			reader.readAsBinaryString(file);
